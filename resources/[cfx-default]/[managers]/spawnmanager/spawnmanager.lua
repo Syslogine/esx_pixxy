@@ -1,7 +1,4 @@
--- in-memory spawnpoint array for this script execution instance
 local spawnPoints = {}
-
--- auto-spawn enabled flag
 local autoSpawnEnabled = false
 local autoSpawnCallback
 
@@ -33,9 +30,6 @@ AddEventHandler('getMapDirectives', function(addDirective)
     end)
 end)
 
-
-
--- loads a set of spawn points from a JSON string
 function loadSpawns(spawnString)
     local data = json.decode(spawnString)
     if not data.spawns then
@@ -48,40 +42,24 @@ end
 
 local spawnNum = 1
 
-local function addSpawnPoint(spawn)
-    -- Validate position and heading
-    local x, y, z, heading = spawn.x, spawn.y, spawn.z, spawn.heading
-    if not x or not y or not z then
-        error("Invalid spawn position: Missing or non-numeric x, y, or z value.")
+function addSpawnPoint(spawn)
+    if not tonumber(spawn.x) or not tonumber(spawn.y) or not tonumber(spawn.z) then
+        error("invalid spawn position")
     end
-
-    if not heading then
-        error("Invalid spawn heading: Missing or non-numeric heading value.")
+    if not tonumber(spawn.heading) then
+        error("invalid spawn heading")
     end
-
-    -- Validate and resolve model
     local model = spawn.model
-    if type(model) == "string" then
-        model = GetHashKey(model)
-    elseif not tonumber(model) then
-        error("Invalid spawn model: Model must be a numeric hash or a string.")
+    if not tonumber(spawn.model) then
+        model = GetHashKey(spawn.model)
     end
-
     if not IsModelInCdimage(model) then
-        error("Invalid spawn model: Model does not exist in game.")
+        error("invalid spawn model")
     end
-
-    -- Assign a unique index to the spawn point for future reference
+    spawn.model = model
     spawn.idx = spawnNum
     spawnNum = spawnNum + 1
-
-    -- Update the model in the spawn data with the potentially hashed model
-    spawn.model = model
-
-    -- Add the validated and possibly modified spawn point to the global list
     table.insert(spawnPoints, spawn)
-
-    -- Return the unique index of the new spawn point
     return spawn.idx
 end
 
